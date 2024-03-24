@@ -2,6 +2,7 @@ package configs
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
@@ -26,7 +27,7 @@ type config struct {
 func LoadEnvs() (config, error) {
 	var cfg config
 
-	err := godotenv.Load()
+	err := godotenv.Load(filepath.Join("./", ".env"))
 	if err != nil {
 		return cfg, err
 	}
