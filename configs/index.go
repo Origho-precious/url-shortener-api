@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -29,15 +28,11 @@ func LoadEnvs() (config, error) {
 	var cfg config
 
 	ginMode, exists := os.LookupEnv("GIN_MODE")
-	if !exists {
-		ginMode = "debug"
-	}
-
-	fmt.Println(ginMode)
-
-	err := godotenv.Load(filepath.Join("./", ".env"))
-	if err != nil {
-		return cfg, err
+	if !exists || (exists && ginMode == "debug") {
+		err := godotenv.Load(filepath.Join("./", ".env"))
+		if err != nil {
+			return cfg, err
+		}
 	}
 
 	cfg.PORT = os.Getenv("PORT")
