@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -26,6 +27,13 @@ type config struct {
 
 func LoadEnvs() (config, error) {
 	var cfg config
+
+	ginMode, exists := os.LookupEnv("GIN_MODE")
+	if !exists {
+		ginMode = "debug"
+	}
+
+	fmt.Println(ginMode)
 
 	err := godotenv.Load(filepath.Join("./", ".env"))
 	if err != nil {
