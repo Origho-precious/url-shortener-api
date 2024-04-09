@@ -31,7 +31,7 @@ func ConnectDB() (*mongo.Database, error) {
 
 	fmt.Println("Database connection established!")
 
-	database := client.Database("url-shortener")
+	database := client.Database("likr")
 
 	return database, nil
 }
