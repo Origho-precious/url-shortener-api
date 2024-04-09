@@ -23,8 +23,10 @@ func UserRouter(r *gin.Engine, DB *mongo.Database) {
 
 	usersRouter := r.Group("/v1/api/users")
 	{
+		usersRouter.Use(middlewares.ValidateAPIKey())
+
 		// Route for user signup
-		usersRouter.POST("/", func(c *gin.Context) {
+		usersRouter.POST("", func(c *gin.Context) {
 			controllers.HandleSignup(c, userService)
 		})
 

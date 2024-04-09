@@ -9,6 +9,7 @@ import (
 
 type config struct {
 	PORT                             string
+	API_KEY                          string
 	BASE_URL                         string
 	GIN_MODE                         string
 	MONGO_URI                        string
@@ -36,6 +37,7 @@ func LoadEnvs() (config, error) {
 	}
 
 	cfg.PORT = os.Getenv("PORT")
+	cfg.API_KEY = os.Getenv("API_KEY")
 	cfg.BASE_URL = os.Getenv("BASE_URL")
 	cfg.GIN_MODE = os.Getenv("GIN_MODE")
 	cfg.MONGO_URI = os.Getenv("MONGO_URI")

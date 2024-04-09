@@ -85,3 +85,31 @@ func ValidateAuthToken() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func ValidateAPIKey() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cfg, err := configs.LoadEnvs()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "internal server error",
+			})
+			c.Abort()
+			return
+		}
+
+		tokenHeader := c.GetHeader("x-api-key")
+		if tokenHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "No api-key provided"})
+			c.Abort()
+			return
+		}
+
+		if tokenHeader != cfg.API_KEY {
+			c.JSON(http.StatusForbidden, gin.H{"error": ""})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}

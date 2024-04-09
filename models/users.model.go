@@ -376,7 +376,7 @@ func (us *UserService) ForgotPassword() error {
 	}
 
 	resetPasswordURL := fmt.Sprintf(
-		"%s/auth/reset-password?token=%s", cfg.CLIENT_URL, insertedID,
+		"%s?rspm=true&token=%s", cfg.CLIENT_URL, insertedID.Hex(),
 	)
 
 	emailService := services.Email{

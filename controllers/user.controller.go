@@ -2,9 +2,12 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/Origho-precious/url-shortener/go/models"
+	"github.com/Origho-precious/url-shortener/go/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -17,17 +20,18 @@ func HandleSignup(c *gin.Context, us *models.UserService) {
 	}
 
 	if err := c.BindJSON(&reqBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	} else if len(reqBody.Password) < 8 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "password must be at least 8 characters long",
+			"error": "Password must be at least 8 characters long",
 		})
 		return
 	}
 
 	userData := models.User{
-		Email:    reqBody.Email,
+		Email:    strings.ToLower(reqBody.Email),
 		Password: reqBody.Password,
 		FullName: reqBody.FullName,
 	}
@@ -36,9 +40,17 @@ func HandleSignup(c *gin.Context, us *models.UserService) {
 
 	createdUser, err := us.CreateUser()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+		log.Println(err)
+
+		var statusCode int
+
+		if err.Error() == "internal server error" {
+			statusCode = http.StatusInternalServerError
+		} else {
+			statusCode = http.StatusBadRequest
+		}
+
+		c.JSON(statusCode, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	}
 
@@ -46,7 +58,7 @@ func HandleSignup(c *gin.Context, us *models.UserService) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "User created successfully",
-		"data": map[string]any{
+		"response": map[string]any{
 			"id":            idString,
 			"email":         createdUser.Email,
 			"fullName":      createdUser.FullName,
@@ -63,20 +75,28 @@ func HandleLogin(c *gin.Context, us *models.UserService) {
 	}
 
 	if err := c.BindJSON(&reqBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	}
 
 	us.User = models.User{
-		Email:    reqBody.Email,
+		Email:    strings.ToLower(reqBody.Email),
 		Password: reqBody.Password,
 	}
 
 	loggedInUser, err := us.AuthenticateUser()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+		log.Println(err)
+
+		var statusCode int
+
+		if err.Error() == "internal server error" {
+			statusCode = http.StatusInternalServerError
+		} else {
+			statusCode = http.StatusBadRequest
+		}
+
+		c.JSON(statusCode, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	}
 
@@ -84,7 +104,7 @@ func HandleLogin(c *gin.Context, us *models.UserService) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User successfully authenticated",
-		"data": map[string]any{
+		"response": map[string]any{
 			"id":            idString,
 			"email":         loggedInUser.Email,
 			"fullName":      loggedInUser.FullName,
@@ -102,7 +122,7 @@ func HandleEmailVerification(c *gin.Context, us *models.UserService) {
 	var reqBody ReqBody
 
 	if err := c.BindJSON(&reqBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "token not provided"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Token not provided"})
 		return
 	}
 
@@ -110,7 +130,7 @@ func HandleEmailVerification(c *gin.Context, us *models.UserService) {
 	objectID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "internal server error",
+			"error": "Internal server error",
 		})
 		return
 	}
@@ -127,7 +147,7 @@ func HandleEmailVerification(c *gin.Context, us *models.UserService) {
 			statusCode = http.StatusBadRequest
 		}
 
-		c.JSON(statusCode, gin.H{"error": err.Error()})
+		c.JSON(statusCode, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	}
 
@@ -142,7 +162,7 @@ func HandleForgotPassword(c *gin.Context, us *models.UserService) {
 	}
 
 	if err := c.BindJSON(&reqBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	}
 
@@ -161,7 +181,7 @@ func HandleForgotPassword(c *gin.Context, us *models.UserService) {
 			statusCode = http.StatusInternalServerError
 		}
 
-		c.JSON(statusCode, gin.H{"error": err.Error()})
+		c.JSON(statusCode, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	}
 
@@ -176,11 +196,11 @@ func HandlePasswordReset(c *gin.Context, us *models.UserService) {
 	}
 
 	if err := c.BindJSON(&reqBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	} else if len(reqBody.Password) < 8 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "password must be at least 8 characters long",
+			"error": "Password must be at least 8 characters long",
 		})
 		return
 	}
@@ -197,7 +217,7 @@ func HandlePasswordReset(c *gin.Context, us *models.UserService) {
 			statusCode = http.StatusBadRequest
 		}
 
-		c.JSON(statusCode, gin.H{"error": err.Error()})
+		c.JSON(statusCode, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	}
 
@@ -213,7 +233,7 @@ func HandleEmailVerificationTokenResend(
 	objectID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "internal server error",
+			"error": "Internal server error",
 		})
 		return
 	}
@@ -223,7 +243,9 @@ func HandleEmailVerificationTokenResend(
 
 	err = us.ResendEmailVerificationToken()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": utils.Capitalise(err.Error()),
+		})
 		return
 	}
 
@@ -237,7 +259,7 @@ func GetUserProfile(c *gin.Context, us *models.UserService) {
 	objectID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "internal server error",
+			"error": "Internal server error",
 		})
 		return
 	}
@@ -246,13 +268,15 @@ func GetUserProfile(c *gin.Context, us *models.UserService) {
 
 	userData, err := us.GetUser()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": utils.Capitalise(err.Error()),
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Successful.",
-		"data": map[string]any{
+		"response": map[string]any{
 			"id":            userId,
 			"email":         userData.Email,
 			"fullName":      userData.FullName,
@@ -268,7 +292,7 @@ func HandleUserFullNameEdit(c *gin.Context, us *models.UserService) {
 	}
 
 	if err := c.BindJSON(&reqBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	}
 
@@ -285,7 +309,7 @@ func HandleUserFullNameEdit(c *gin.Context, us *models.UserService) {
 	objectID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "internal server error",
+			"error": "Internal server error",
 		})
 		return
 	}
@@ -294,13 +318,13 @@ func HandleUserFullNameEdit(c *gin.Context, us *models.UserService) {
 
 	userData, err := us.UpdateUserFullName()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.Capitalise(err.Error())})
 		return
 	}
 
 	c.JSON(http.StatusNotFound, gin.H{
 		"message": "Fullname updated successfully.",
-		"data": map[string]any{
+		"response": map[string]any{
 			"id":            userId,
 			"email":         userData.Email,
 			"fullName":      userData.FullName,

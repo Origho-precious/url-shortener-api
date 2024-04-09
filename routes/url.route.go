@@ -30,11 +30,13 @@ func UrlRouter(r *gin.Engine, DB *mongo.Database) {
 
 	router := r.Group("/v1/api/urls")
 	{
-		router.POST("/", validateAuthToken(), func(c *gin.Context) {
+		router.Use(middlewares.ValidateAPIKey())
+
+		router.POST("", validateAuthToken(), func(c *gin.Context) {
 			controllers.HandleCreateShortUrl(c, urlService, userService)
 		})
 
-		router.GET("/", validateAuthToken(), func(c *gin.Context) {
+		router.GET("", validateAuthToken(), func(c *gin.Context) {
 			controllers.GetUrlsByUserID(c, urlService)
 		})
 
